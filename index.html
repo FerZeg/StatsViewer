@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100dvh;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        form {
+            display: flex;
+            gap: 0.2rem;
+            max-width: 200px;
+            flex-direction: column;
+
+        }
+        form div {
+            display: flex;
+            gap: 0.2rem;
+            align-items: center;
+        }
+        form div label {
+            width: 70px;
+        }
+        form div input {
+            width: 50px;
+        }
+        form div input[type="submit"] {
+            width: 100%;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <canvas width="400" height="400">
+        Tu navegador no soporta canvas
+    </canvas>
+    <form action="">
+        <div>
+            <label for="ATK">ATK</label>
+            <input type="number" name="ATK" id="ATK" value="20">
+        </div>
+        <div>
+            <label for="DEF">DEF</label>
+            <input type="number" name="DEF" id="DEF" value="10">
+        </div>
+        <div>
+            <label for="HP">HP</label>
+            <input type="number" name="HP" id="HP" value="40">
+        </div>
+        <div>
+            <label for="SPD">SPD</label>
+            <input type="number" name="SPD" id="SPD" value="20">
+        </div>
+        <div>
+            <label for="PREC">PREC</label>
+            <input type="number" name="PREC" id="PREC" value="20">
+        </div>
+        <div>
+            <label for="EVA">EVA</label>
+            <input type="number" name="EVA" id="EVA" value="10">
+        </div>
+        <div>
+            <input type="submit" value="Actualizar">
+        </div>
+    </form>
+</body>
+<script>
+    let ATK = 20;
+    let DEF = 10;
+    let HP = 40;
+    let SPD = 20;
+    let PREC = 20;
+    let EVA = 10;
+
+    const canvas = document.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    const a = 2 * Math.PI / 6;
+    const r = 120;
+
+    
+    function drawHexagon(x, y) {
+    const stats = [ATK, DEF, HP, SPD, PREC, EVA]; // Array of stats (numerical values)
+    const statLabels = ['ATK', 'DEF', 'HP', 'SPD', 'PREC', 'EVA']; // Array of stat labels
+    const statPositions = []; // To store the positions of stats
+    const maxStat = Math.max(...stats); // Find the maximum stat value for scaling
+
+    ctx.beginPath();
+    for (var i = 0; i < 6; i++) {
+        const vx = x + r * Math.cos(a * i - Math.PI / 2);
+        const vy = y + r * Math.sin(a * i - Math.PI / 2);
+        ctx.lineTo(vx, vy);
+
+        // Save the positions for drawing text later
+        statPositions.push({x: vx, y: vy});
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'transparent'; // No border
+    ctx.fillStyle = 'lightgray'; // Fill color
+    ctx.fill(); // Fill the hexagon with the set color
+    ctx.stroke();
+
+    // Draw lines from center to each vertex with white color
+    ctx.strokeStyle = 'white'; // Set line color to white
+    for (const pos of statPositions) {
+        ctx.beginPath();
+        ctx.moveTo(x, y); // Start at center
+        ctx.lineTo(pos.x, pos.y); // Draw line to vertex
+        ctx.stroke(); // Apply the stroke
+    }
+
+    // Draw the stats polygon
+    // Draw the stats polygon
+    ctx.beginPath();
+    stats.forEach((stat, i) => {
+        // Scale the vertex position based on the stat value
+        let finalMaxStat = maxStat < 10 ? 10 : maxStat; // Set a minimum value for maxStat
+        const scaledR = r * (stat / finalMaxStat); // Scale factor
+        const vx = x + scaledR * Math.cos(a * i - Math.PI / 2);
+        const vy = y + scaledR * Math.sin(a * i - Math.PI / 2);
+
+        if (i === 0) {
+            ctx.moveTo(vx, vy); // Move to the starting vertex
+        } else {
+            ctx.lineTo(vx, vy); // Draw line to the next vertex
+        }
+    });
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(120, 216, 230, 0.5)'; // Set fill color to light blue with opacity
+    ctx.fill(); // Fill the stats polygon
+    ctx.stroke(); // Stroke the stats polygon
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(120, 216, 230, 0.7)'; // Set stats polygon border color
+    ctx.stroke(); // Stroke the stats polygon
+
+    // Set font for the stats
+    ctx.font = '16px Arial';
+    ctx.fillStyle = 'black';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Draw each stat and its label at its vertex with a margin
+    for (let i = 0; i < statPositions.length; i++) {
+        // Adjust margin based on position
+        let margin = 30; // Default margin
+        if (i === 1 || i === 4 || i === 5 || i === 2) {
+            margin = 40; // Increase margin for side positions
+        }
+
+        // Calculate the direction vector from the center to the vertex
+        const dirX = statPositions[i].x - x;
+        const dirY = statPositions[i].y - y;
+        // Normalize the direction vector
+        const len = Math.sqrt(dirX * dirX + dirY * dirY);
+        const normX = dirX / len;
+        const normY = dirY / len;
+        // Calculate the new position with the margin
+        const textX = statPositions[i].x + normX * margin;
+        const textY = statPositions[i].y + normY * margin;
+        // Draw the stat value and label at the new position
+        ctx.fillText(`${statLabels[i]}: ${stats[i]}`, textX, textY);
+    }
+}
+
+drawHexagon(width / 2, height / 2);
+
+document.addEventListener('submit', function(e) {
+    e.preventDefault();
+    ATK = parseInt(document.getElementById('ATK').value);
+    DEF = parseInt(document.getElementById('DEF').value);
+    HP = parseInt(document.getElementById('HP').value);
+    SPD = parseInt(document.getElementById('SPD').value);
+    PREC = parseInt(document.getElementById('PREC').value);
+    EVA = parseInt(document.getElementById('EVA').value);
+    ctx.clearRect(0, 0, width, height);
+    drawHexagon(width / 2, height / 2);
+});
+</script>
+</html>
